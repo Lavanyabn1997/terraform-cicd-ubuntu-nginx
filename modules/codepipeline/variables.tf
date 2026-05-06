@@ -7,7 +7,7 @@ variable "deploy_app" {}
 variable "deploy_group" {}
 
 variable "pipeline_role" {
-  default = "arn:aws:iam::123456789012:role/codepipeline-role"
+  default = module.iam.codepipeline_role_arn
 }
 
 variable "s3_bucket" {
