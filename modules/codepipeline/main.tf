@@ -11,34 +11,39 @@ resource "aws_codepipeline" "pipeline" {
     type     = "S3"
   }
 
+  # ================= SOURCE =================
   stage {
     name = "Source"
 
     action {
-      name             = "GitHub"
+      name             = "Source"
       category         = "Source"
-      provider         = "GitHub"
       owner            = "ThirdParty"
-
+      provider         = "GitHub"
+      version          = "1"
       output_artifacts = ["source"]
 
       configuration = {
         Owner      = var.github_owner
         Repo       = var.github_repo
-        OAuthToken = var.github_token
         Branch     = "main"
+        OAuthToken = var.github_token
       }
     }
   }
 
+  # ================= BUILD =================
   stage {
     name = "Build"
 
     action {
-      name            = "Build"
-      category        = "Build"
-      provider        = "CodeBuild"
-      input_artifacts = ["source"]
+      name             = "Build"
+      category         = "Build"
+      owner            = "AWS"
+      provider         = "CodeBuild"
+      version          = "1"
+      input_artifacts  = ["source"]
+      output_artifacts = ["build_output"]
 
       configuration = {
         ProjectName = var.build_project
@@ -46,15 +51,17 @@ resource "aws_codepipeline" "pipeline" {
     }
   }
 
+  # ================= DEPLOY =================
   stage {
     name = "Deploy"
 
     action {
       name            = "Deploy"
       category        = "Deploy"
+      owner           = "AWS"
       provider        = "CodeDeploy"
-
-      input_artifacts = ["source"]
+      version         = "1"
+      input_artifacts = ["build_output"]
 
       configuration = {
         ApplicationName     = var.deploy_app
