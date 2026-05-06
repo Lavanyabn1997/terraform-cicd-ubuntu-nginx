@@ -37,4 +37,5 @@ module "codepipeline" {
   build_project = module.codebuild.project_name
   deploy_app    = module.codedeploy.app_name
   deploy_group  = module.codedeploy.group_name
+  pipeline_role = module.iam.codepipeline_role_arn
 }
