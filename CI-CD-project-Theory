@@ -1,0 +1,113 @@
+  This is a solid real-world Terraform-based CI/CD infrastructure project. In an interview, you don’t want to just list folders—you want to explain it like a system design story: problem → architecture → flow → why choices were made → tradeoffs.
+
+Here’s a clean way to explain it.
+
+🧠 1. One-line project summary (start here)
+
+“I built a fully automated CI/CD pipeline on AWS using Terraform, where code changes trigger a pipeline that builds a Docker image, pushes it to ECR, and deploys it to EC2 instances running Nginx.”
+
+This sets the tone immediately.
+
+🏗️ 2. High-level architecture (what you designed)
+
+Break it into 5 layers:
+
+☁️ Infrastructure layer (Terraform modules)
+vpc/ → networking (subnets, routing, IGW, etc.)
+ec2/ → compute layer where app runs
+ecr/ → Docker image repository
+iam/ → permissions for CodeBuild, CodeDeploy, EC2
+codebuild/ → build Docker images
+codedeploy/ → deploy app to EC2
+codepipeline/ → orchestrates the whole CI/CD flow
+
+👉 “Everything is modularized using Terraform for reusability and separation of concerns.”
+
+🔄 3. CI/CD flow (MOST IMPORTANT PART)
+
+Explain this like a story:
+
+🚀 Step 1: Code push triggers pipeline
+Developer pushes code to GitHub (or CodeCommit)
+codepipeline detects the change and starts execution
+
+🔨 Step 2: Build stage (CodeBuild)
+
+Inside modules/codebuild:
+
+Code is pulled from pipeline
+buildspec.yml runs:
+builds Docker image using Dockerfile
+tags image with commit/version
+logs into ECR
+pushes image to ECR repo
+
+👉 Output:
+
+Docker image stored in ECR
+
+📦 Step 3: Artifact passing
+CodePipeline passes build output to next stage
+No manual intervention
+
+🚀 Step 4: Deploy stage (CodeDeploy)
+
+Inside modules/codedeploy:
+
+CodeDeploy connects to EC2 instances (via agent)
+Uses appspec.yml
+Runs deployment hooks:
+stop old container
+pull latest image from ECR
+run new container using deploy.sh
+
+🖥️ Step 5: Application runs on EC2
+
+Inside modules/ec2:
+
+EC2 instances are created in VPC
+user_data.sh installs:
+Docker
+CodeDeploy agent
+Nginx container runs and serves app on port 80
+
+📦 4. Supporting components explanation
+🐳 ECR (modules/ecr)
+Stores Docker images
+Acts as versioned container registry
+
+🔐 IAM (modules/iam)
+Gives permissions to:
+CodeBuild → push to ECR
+CodeDeploy → deploy to EC2
+EC2 → pull images from ECR
+
+🌐 VPC (modules/vpc)
+Creates isolated network:
+public/private subnets
+routing
+internet access for EC2
+
+⚙️ Terraform root module (terraform/)
+Orchestrates all modules:
+calls VPC
+creates EC2
+connects CodePipeline → CodeBuild → CodeDeploy
+
+🔁 5. End-to-end CI/CD flow (simple interview diagram in words)
+
+You can say:
+
+GitHub Push
+   ↓
+CodePipeline triggers
+   ↓
+CodeBuild builds Docker image
+   ↓
+Push image to ECR
+   ↓
+CodeDeploy pulls image on EC2
+   ↓
+deploy.sh runs container
+   ↓
+Nginx app goes live on port 80
